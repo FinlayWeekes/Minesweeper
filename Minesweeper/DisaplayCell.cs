@@ -24,7 +24,7 @@ class DisplayCell : Cell
     }
     public override void Flag()
     {
-
+        isFlagged = !isFlagged;
     }
     public override bool Open()
     {

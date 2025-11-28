@@ -17,6 +17,7 @@ namespace Minesweeper
         private int height;
         private int width;
         private int mineCount;
+        private int clickCount;
 
         private Color hiddenCol = Color.White;
         private Color revealedCol = Color.LightGray;
@@ -28,6 +29,7 @@ namespace Minesweeper
         {
             InitializeComponent();
 
+            clickCount = 0;
             height = Height;
             width = Width;
             mineCount = Minecount;
@@ -42,6 +44,7 @@ namespace Minesweeper
 
             PopulateCells();
         }
+
         private void PopulateCells()
         {
             cells = new DisplayCell[height, width];
@@ -78,24 +81,32 @@ namespace Minesweeper
             // places mines where there are no overlapping and to make te first cell clear
             for (int i = 0; i < mineCount; i++)
             {
-                int col = rnd.Next(0, width);
-                int row = rnd.Next(0, height);
-                if (!cells[row, col].IsMine)
+                int col;
+                int row;
+                do
                 {
+                    col = rnd.Next(0, width);
+                    row = rnd.Next(0, height);
+
                     bool nextToStart = false;
 
                     for (int xOfset = -1; xOfset <= 1; xOfset++)
                     {
                         for (int yOfset = -1; yOfset <= 1; yOfset++)
                         {
-                            if (firstCol + xOfset == col && firstRow + yOfset == row)
+                            if (col + xOfset >= 0 &&
+                                col + xOfset < cells.GetLength(1) &&
+                                row + yOfset >= 0 &&
+                                row + yOfset < cells.GetLength(0) &&
+                                firstCol + xOfset == col && 
+                                firstRow + yOfset == row)
                             {
                                 nextToStart = true;
                             }
                         }
                     }
 
-                    if (!nextToStart)
+                    if (!nextToStart && !cells[row, col].IsMine)
                     {
                         cells[row, col].SetMine();
 
@@ -103,7 +114,10 @@ namespace Minesweeper
                         {
                             for (int yOfset = -1; yOfset <= 1; yOfset++)
                             {
-                                if (col + xOfset >= 0 && col + xOfset < cells.GetLength(0) && row + yOfset >= 0 && row + yOfset < cells.GetLength(1))
+                                if (col + xOfset >= 0 && 
+                                    col + xOfset < cells.GetLength(1) && 
+                                    row + yOfset >= 0 && 
+                                    row + yOfset < cells.GetLength(0))
                                 {
                                     cells[row + yOfset, col + xOfset].IncreaseValue();
                                 }
@@ -111,6 +125,7 @@ namespace Minesweeper
                         }
                     }
                 }
+                while (!cells[row, col].IsMine);
             }
 
 
@@ -121,15 +136,95 @@ namespace Minesweeper
 
             if (e.Button == MouseButtons.Right)
             {
-                FlagCell(btn);
+                if (GetDisplayCell(btn).IsHidden)
+                {
+                    FlagCell(btn);
+                }
             }
             else if (e.Button == MouseButtons.Left)
             {
-                RevealCell(btn);
+                if (GetDisplayCell(btn).IsHidden)
+                {
+                    RevealCell(btn);
+                }
+            }
+            else if (e.Button == MouseButtons.Middle)
+            {
+                if (!GetDisplayCell(btn).IsHidden)
+                {
+                    Chord(btn);
+                }
+            }
+
+            clickCount++;
+        }
+        private void Chord(Button btn)
+        {
+            int adjacentHiddenCells = 0;
+            int adjacentFlags = 0;
+            for (int xOfset = -1; xOfset <= 1; xOfset++)
+            {
+                for (int yOfset = -1; yOfset <= 1; yOfset++)
+                {
+                    if (((Point)btn.Tag).X + xOfset >= 0 && ((Point)btn.Tag).X + xOfset < cells.GetLength(1) && ((Point)btn.Tag).Y + yOfset >= 0 && ((Point)btn.Tag).Y + yOfset < cells.GetLength(0))
+                    {
+                        if (cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].IsHidden)
+                        {
+                            adjacentHiddenCells++;
+                            if (cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].IsFlagged)
+                            {
+                                adjacentFlags++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // opens all adjacent cells if the cells effective value = 0
+            if (GetDisplayCell(btn).Value == adjacentFlags)
+            {
+                for (int xOfset = -1; xOfset <= 1; xOfset++)
+                {
+                    for (int yOfset = -1; yOfset <= 1; yOfset++)
+                    {
+                        if (((Point)btn.Tag).X + xOfset >= 0 &&
+                            ((Point)btn.Tag).X + xOfset < cells.GetLength(1) &&
+                            ((Point)btn.Tag).Y + yOfset >= 0 && 
+                            ((Point)btn.Tag).Y + yOfset < cells.GetLength(0) &&
+                            !cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].IsFlagged &&
+                            cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].IsHidden)
+                        {
+                            RevealCell(cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].Btn);
+                        }
+                    }
+                }
+            }
+            // flags all adjacent cells if the cells value is the number of adjacent cells
+            else if (GetDisplayCell(btn).Value == adjacentHiddenCells)
+            {
+                for (int xOfset = -1; xOfset <= 1; xOfset++)
+                {
+                    for (int yOfset = -1; yOfset <= 1; yOfset++)
+                    {
+                        if (((Point)btn.Tag).X + xOfset >= 0 && 
+                            ((Point)btn.Tag).X + xOfset < cells.GetLength(1) &&
+                            ((Point)btn.Tag).Y + yOfset >= 0 && 
+                            ((Point)btn.Tag).Y + yOfset < cells.GetLength(0) &&
+                            !cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].IsFlagged &&
+                            cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].IsHidden)
+                        {
+                            FlagCell(cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].Btn);
+                        }
+                    }
+                }
             }
         }
         private void FlagCell(Button btn)
         {
+            if (!GetDisplayCell(btn).IsHidden) return;
+
+            GetDisplayCell(btn).Flag();
+
             if (btn.Text == "F")
             {
                 btn.Text = "";
@@ -156,7 +251,7 @@ namespace Minesweeper
                 PopulateMines(((Point)btn.Tag).X, ((Point)btn.Tag).Y);
             }
 
-            if (cells[((Point)btn.Tag).Y, ((Point)btn.Tag).X].IsMine)
+            if (GetDisplayCell(btn).IsMine)
             {
                 btn.BackColor = explodedMineCol;
                 btn.Text = "";
@@ -165,16 +260,47 @@ namespace Minesweeper
             }
 
             btn.BackColor = revealedCol;
-            btn.Text = cells[((Point)btn.Tag).Y, ((Point)btn.Tag).X].Value.ToString();
-            btn.Enabled = false;
+            GetDisplayCell(btn).Open();
+
+            // opens all ajacent is a clear cell is revealed
+            if (GetDisplayCell(btn).Value == 0)
+            {
+                btn.Text = "";
+
+                for (int xOfset = -1; xOfset <= 1; xOfset++)
+                {
+                    for (int yOfset = -1; yOfset <= 1; yOfset++)
+                    {
+                        if (((Point)btn.Tag).X + xOfset >= 0 && 
+                            ((Point)btn.Tag).X + xOfset < cells.GetLength(1) && 
+                            ((Point)btn.Tag).Y + yOfset >= 0 && 
+                            ((Point)btn.Tag).Y + yOfset < cells.GetLength(0) &&
+                            cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].IsHidden)
+                        {
+                            RevealCell(cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].Btn);
+                        }
+                        
+                    }
+                }
+
+            }
+            else
+            {
+                btn.Text = GetDisplayCell(btn).Value.ToString();
+            }
 
             if (HasWon())
             {
+                resetButton.Text = "YOU WIN";
                 foreach (DisplayCell cell in cells)
                 {
                     cell.Btn.Enabled = false;
                 }
             }
+        }
+        private DisplayCell GetDisplayCell(Button btn)
+        {
+            return cells[((Point)btn.Tag).Y, ((Point)btn.Tag).X];
         }
         private bool HasWon()
         {
@@ -184,6 +310,43 @@ namespace Minesweeper
                 return true;
             }
             return false;
+        }
+        private int Find3BV()
+        {
+            int betchels = 0;
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    if (!IsAdjacentToClear(row, col))
+                    {
+                        betchels++;
+                    }
+                }
+            }
+        }
+        private bool IsAdjacentToClear(int row, int col)
+        {
+            for (int xOfset = -1; xOfset <= 1; xOfset++)
+            {
+                for (int yOfset = -1; yOfset <= 1; yOfset++)
+                {
+                    if (((Point)btn.Tag).X + xOfset >= 0 &&
+                        ((Point)btn.Tag).X + xOfset < cells.GetLength(1) &&
+                        ((Point)btn.Tag).Y + yOfset >= 0 &&
+                        ((Point)btn.Tag).Y + yOfset < cells.GetLength(0))
+                    {
+                        if (cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].Value == 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+    }
+}
         }
         private void RevealMine()
         {
@@ -214,7 +377,9 @@ namespace Minesweeper
         {
             firstClick = true;
             remaningMines = mineCount;
+            clickCount = 0;
             remaningHiddenCells = width * height;
+            resetButton.Text = "Reset";
 
             foreach (DisplayCell cell in cells)
             {

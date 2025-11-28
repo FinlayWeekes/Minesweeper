@@ -10,3 +10,16 @@ D:\School\Computing\NEA\Code\WinForms\Minesweeper\Minesweeper\obj\Debug\Mineswee
 D:\School\Computing\NEA\Code\WinForms\Minesweeper\Minesweeper\obj\Debug\Minesweeper.exe
 D:\School\Computing\NEA\Code\WinForms\Minesweeper\Minesweeper\obj\Debug\Minesweeper.pdb
 D:\School\Computing\NEA\Code\WinForms\Minesweeper\Minesweeper\obj\Debug\Minesweeper.Board.resources
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\bin\Debug\Minesweeper.exe.config
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\bin\Debug\Minesweeper.exe
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\bin\Debug\Minesweeper.pdb
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.csproj.AssemblyReference.cache
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.exe.config
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.Board.resources
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.CustomForm.resources
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.Form1.resources
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.Properties.Resources.resources
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.csproj.GenerateResource.cache
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.csproj.CoreCompileInputs.cache
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.exe
+\\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.pdb

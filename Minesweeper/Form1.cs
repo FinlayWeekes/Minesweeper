@@ -26,7 +26,7 @@ namespace Minesweeper
         {
             CustomForm customForm = new CustomForm();
             customForm.Show();
-            this.Hide();
+            this.Close();
         }
     }
 }
