@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Configuration;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Windows.Forms;
 
@@ -9,6 +11,7 @@ namespace Minesweeper
     public partial class Board : Form
     {
         private DisplayCell[,] cells;
+        private string difficulty;
         private bool firstClick = true;
         private const int headerSize = 40;
         private int remaningHiddenCells;
@@ -24,11 +27,11 @@ namespace Minesweeper
         private Color explodedMineCol = Color.Red;
         private Color revealedMineCol = Color.DarkRed;
 
-
-        public Board(int Height, int Width, int Minecount)
+        public Board(int Height, int Width, int Minecount, string Difficulty)
         {
             InitializeComponent();
 
+            difficulty = Difficulty;
             clickCount = 0;
             height = Height;
             width = Width;
@@ -48,6 +51,7 @@ namespace Minesweeper
         private void PopulateCells()
         {
             cells = new DisplayCell[height, width];
+            int fontSize = Math.Max(cellSize - 19, 5);
 
             SuspendLayout();
 
@@ -62,6 +66,7 @@ namespace Minesweeper
                     btn.Name = "Cell" + (row * width + col);
                     btn.Size = new Size(cellSize, cellSize);
                     btn.BackColor = hiddenCol;
+                    btn.Font = new Font("Microsoft Sans Serif", fontSize);
 
                     btn.Tag = new Point(col, row);
 
@@ -83,8 +88,11 @@ namespace Minesweeper
             {
                 int col;
                 int row;
+                bool mineAdded;
+
                 do
                 {
+                    mineAdded = false;
                     col = rnd.Next(0, width);
                     row = rnd.Next(0, height);
 
@@ -98,8 +106,8 @@ namespace Minesweeper
                                 col + xOfset < cells.GetLength(1) &&
                                 row + yOfset >= 0 &&
                                 row + yOfset < cells.GetLength(0) &&
-                                firstCol + xOfset == col && 
-                                firstRow + yOfset == row)
+                                col + xOfset == firstCol &&
+                                row + yOfset == firstRow)
                             {
                                 nextToStart = true;
                             }
@@ -108,15 +116,16 @@ namespace Minesweeper
 
                     if (!nextToStart && !cells[row, col].IsMine)
                     {
+                        mineAdded = true;
                         cells[row, col].SetMine();
 
                         for (int xOfset = -1; xOfset <= 1; xOfset++)
                         {
                             for (int yOfset = -1; yOfset <= 1; yOfset++)
                             {
-                                if (col + xOfset >= 0 && 
-                                    col + xOfset < cells.GetLength(1) && 
-                                    row + yOfset >= 0 && 
+                                if (col + xOfset >= 0 &&
+                                    col + xOfset < cells.GetLength(1) &&
+                                    row + yOfset >= 0 &&
                                     row + yOfset < cells.GetLength(0))
                                 {
                                     cells[row + yOfset, col + xOfset].IncreaseValue();
@@ -125,10 +134,8 @@ namespace Minesweeper
                         }
                     }
                 }
-                while (!cells[row, col].IsMine);
+                while (!mineAdded);
             }
-
-
         }
         private void CellClick(object sender, MouseEventArgs e)
         {
@@ -146,6 +153,10 @@ namespace Minesweeper
                 if (GetDisplayCell(btn).IsHidden)
                 {
                     RevealCell(btn);
+                }
+                else
+                {
+                    Chord(btn);
                 }
             }
             else if (e.Button == MouseButtons.Middle)
@@ -240,7 +251,6 @@ namespace Minesweeper
         }
         private void RevealCell(Button btn)
         {
-            // disables the cell from interactions
             // makes the background grey if no mine
             // makes the background red if mine and runs RevealMine()
             remaningHiddenCells--;
@@ -287,16 +297,22 @@ namespace Minesweeper
             else
             {
                 btn.Text = GetDisplayCell(btn).Value.ToString();
+                AddColourToText(int.Parse(btn.Text), btn);
             }
 
-            if (HasWon())
+            if (HasWon()) WonGame();
+        }
+        private void WonGame()
+        {
+            // makes all cells unclickable
+            resetButton.Text = "YOU WIN";
+            foreach (DisplayCell cell in cells)
             {
-                resetButton.Text = "YOU WIN";
-                foreach (DisplayCell cell in cells)
-                {
-                    cell.Btn.Enabled = false;
-                }
+                cell.Btn.Enabled = false;
             }
+
+            Stats stats = new Stats(difficulty, width, height, mineCount, Find3BV(), clickCount, 100);
+            stats.Show();
         }
         private DisplayCell GetDisplayCell(Button btn)
         {
@@ -314,13 +330,64 @@ namespace Minesweeper
         private int Find3BV()
         {
             int betchels = 0;
+
+            // finds all clicks that are not revealed indriectly by a clear cell
             for (int row = 0; row < height; row++)
             {
                 for (int col = 0; col < width; col++)
                 {
-                    if (!IsAdjacentToClear(row, col))
+                    if (!cells[row, col].IsMine && !IsAdjacentToClear(row, col))
                     {
                         betchels++;
+                    }
+                }
+            }
+            
+            // finds all groups of cells that clicking a clear cell opens
+            bool[,] grid = new bool[height, width];
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    if (cells[row, col].Value == 0)
+                    {
+                        grid[row, col] = true;
+                    }
+                    else
+                    {
+                        grid[row, col] = false;
+                    }
+                }
+            }
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    if (grid[row, col])
+                    {
+                        Open3BV(grid, row, col);
+                        betchels++;
+                    }
+                }
+            }
+
+            return betchels;
+        }
+        private void Open3BV(bool[,] grid, int row, int col)
+        {
+            grid[row, col] = false;
+            for (int xOfset = -1; xOfset <= 1; xOfset++)
+            {
+                for (int yOfset = -1; yOfset <= 1; yOfset++)
+                {
+                    if (col + xOfset >= 0 &&
+                        col + xOfset < grid.GetLength(1) &&
+                        row + yOfset >= 0 &&
+                        row + yOfset < grid.GetLength(0) &&
+                        grid[row, col]
+                        )
+                    {
+                        Open3BV(grid, row + yOfset, col + xOfset);
                     }
                 }
             }
@@ -331,22 +398,17 @@ namespace Minesweeper
             {
                 for (int yOfset = -1; yOfset <= 1; yOfset++)
                 {
-                    if (((Point)btn.Tag).X + xOfset >= 0 &&
-                        ((Point)btn.Tag).X + xOfset < cells.GetLength(1) &&
-                        ((Point)btn.Tag).Y + yOfset >= 0 &&
-                        ((Point)btn.Tag).Y + yOfset < cells.GetLength(0))
+                    if (((Point)cells[row, col].Btn.Tag).X + xOfset >= 0 &&
+                        ((Point)cells[row, col].Btn.Tag).X + xOfset < cells.GetLength(1) &&
+                        ((Point)cells[row, col].Btn.Tag).Y + yOfset >= 0 &&
+                        ((Point)cells[row, col].Btn.Tag).Y + yOfset < cells.GetLength(0) &&
+                        cells[((Point)cells[row, col].Btn.Tag).Y + yOfset, ((Point)cells[row, col].Btn.Tag).X + xOfset].Value == 0)
                     {
-                        if (cells[((Point)btn.Tag).Y + yOfset, ((Point)btn.Tag).X + xOfset].Value == 0)
-                        {
-                            return true;
-                        }
+                        return true;
                     }
                 }
             }
             return false;
-        }
-    }
-}
         }
         private void RevealMine()
         {
@@ -354,10 +416,15 @@ namespace Minesweeper
 
             foreach (DisplayCell cell in cells)
             {
-                if (cell.IsMine && (cell.Btn.BackColor != explodedMineCol || explodedMineCol == revealedMineCol))
+                if (cell.IsMine)
                 {
-                    cell.Btn.BackColor = revealedMineCol;
+                    if (cell.Btn.BackColor != explodedMineCol || explodedMineCol == revealedMineCol)
+                    {
+                        cell.Btn.BackColor = revealedMineCol;
+                    }
+                    cell.Btn.Text = "";
                 }
+                
                 cell.Btn.Enabled = false;
             }
         }
@@ -371,6 +438,20 @@ namespace Minesweeper
             int maxCell = Math.Min(maxCellWidth, maxCellHeight);
 
             return Math.Min(maxSize, maxCell);
+        }
+        public void AddColourToText(int value, Button btn)
+        {
+            switch (value)
+            {
+                case 1: btn.ForeColor = Color.DarkBlue; break;
+                case 2: btn.ForeColor = Color.Green; break;
+                case 3: btn.ForeColor = Color.Red; break;
+                case 4: btn.ForeColor = Color.Navy; break;
+                case 5: btn.ForeColor = Color.DarkRed; break;
+                case 6: btn.ForeColor = Color.MediumTurquoise; break;
+                case 7: btn.ForeColor = Color.Black; break;
+                case 8: btn.ForeColor = Color.DarkGray; break;
+            }
         }
 
         private void resetButton_Click(object sender, EventArgs e)

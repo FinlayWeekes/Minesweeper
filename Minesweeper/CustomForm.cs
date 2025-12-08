@@ -23,7 +23,7 @@ namespace Minesweeper
             int width = int.Parse(this.widthTextBox.Text);
             int mineCount = int.Parse(this.mineCountTextBox.Text);
 
-            Board board = new Board(height, width, mineCount);
+            Board board = new Board(height, width, mineCount, "Custom");
             board.Show();
             this.Hide();
         }

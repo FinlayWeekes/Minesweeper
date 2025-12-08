@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 
 class DisplayCell : Cell
@@ -44,5 +45,6 @@ class DisplayCell : Cell
         isHidden = true;
         btn.Text = "";
         btn.Enabled = true;
+        btn.ForeColor = Color.Black;
     }
 }

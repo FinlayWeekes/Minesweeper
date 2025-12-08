@@ -17,16 +17,36 @@ namespace Minesweeper
             InitializeComponent();
         }
 
-        private void label1_Click(object sender, EventArgs e)
+        private void customButton_Click(object sender, EventArgs e)
+        {
+            CustomForm customForm = new CustomForm();
+            customForm.Show();
+            this.Hide();
+        }
+
+        private void beginnerButton_Click(object sender, EventArgs e)
         {
 
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void amateurButton_Click(object sender, EventArgs e)
         {
-            CustomForm customForm = new CustomForm();
-            customForm.Show();
-            this.Close();
+
+        }
+
+        private void expertButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void buttonMaster_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void intermediateButton_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
