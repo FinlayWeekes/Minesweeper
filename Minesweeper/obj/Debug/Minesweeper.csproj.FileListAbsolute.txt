@@ -50,11 +50,7 @@ D:\School\Computing\NEA\Code\WinForms\Minesweeper-main\Minesweeper-main\Mineswee
 \\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.csproj.CoreCompileInputs.cache
 \\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.exe
 \\crgs-server-ys1\u241340\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.pdb
-H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\bin\Debug\Minesweeper.exe.config
-H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\bin\Debug\Minesweeper.exe
-H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\bin\Debug\Minesweeper.pdb
 H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.csproj.AssemblyReference.cache
-H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.exe.config
 H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.Board.resources
 H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.CustomForm.resources
 H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.Form1.resources
@@ -62,5 +58,9 @@ H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\D
 H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.Properties.Resources.resources
 H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.csproj.GenerateResource.cache
 H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.csproj.CoreCompileInputs.cache
+H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\bin\Debug\Minesweeper.exe.config
+H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\bin\Debug\Minesweeper.exe
+H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\bin\Debug\Minesweeper.pdb
 H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.exe
 H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.pdb
+H:\Computing\NEA\Minesweeper-main\Minesweeper\Minesweeper-main\Minesweeper\obj\Debug\Minesweeper.exe.config

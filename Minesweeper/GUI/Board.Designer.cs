@@ -33,6 +33,9 @@
             this.MineCountDisplay = new System.Windows.Forms.Label();
             this.timer = new System.Windows.Forms.Timer(this.components);
             this.timeLabel = new System.Windows.Forms.Label();
+            this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
+            this.menuButton = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.SuspendLayout();
             // 
             // resetButton
@@ -70,16 +73,33 @@
             this.timeLabel.TabIndex = 2;
             this.timeLabel.Text = "0";
             // 
+            // errorProvider1
+            // 
+            this.errorProvider1.ContainerControl = this;
+            // 
+            // menuButton
+            // 
+            this.menuButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.menuButton.Location = new System.Drawing.Point(328, 8);
+            this.menuButton.Name = "menuButton";
+            this.menuButton.Size = new System.Drawing.Size(47, 23);
+            this.menuButton.TabIndex = 3;
+            this.menuButton.Text = "Menu";
+            this.menuButton.UseVisualStyleBackColor = true;
+            this.menuButton.Click += new System.EventHandler(this.menuButton_Click);
+            // 
             // Board
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(384, 401);
+            this.Controls.Add(this.menuButton);
             this.Controls.Add(this.timeLabel);
             this.Controls.Add(this.MineCountDisplay);
             this.Controls.Add(this.resetButton);
             this.Name = "Board";
             this.Text = "Board";
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -91,5 +111,7 @@
         private System.Windows.Forms.Label MineCountDisplay;
         private System.Windows.Forms.Timer timer;
         private System.Windows.Forms.Label timeLabel;
+        private System.Windows.Forms.ErrorProvider errorProvider1;
+        private System.Windows.Forms.Button menuButton;
     }
 }

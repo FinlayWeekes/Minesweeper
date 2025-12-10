@@ -5,6 +5,7 @@ using System.Drawing.Configuration;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using Minesweeper;
 
 namespace Minesweeper
 {
@@ -48,7 +49,6 @@ namespace Minesweeper
 
             PopulateCells();
         }
-
         private void PopulateCells()
         {
             cells = new DisplayCell[height, width];
@@ -68,13 +68,12 @@ namespace Minesweeper
                     btn.Size = new Size(cellSize, cellSize);
                     btn.BackColor = hiddenCol;
                     btn.Font = new Font("Microsoft Sans Serif", fontSize);
-
                     btn.Tag = new Point(col, row);
-
                     btn.MouseUp += CellClick;
 
                     Controls.Add(btn);
                     cells[row, col] = new DisplayCell(btn);
+                    cells[row, col].ResetValues();
                 }
             }
 
@@ -458,6 +457,7 @@ namespace Minesweeper
             }
         }
 
+
         private void resetButton_Click(object sender, EventArgs e)
         {
             firstClick = true;
@@ -467,6 +467,7 @@ namespace Minesweeper
             remaningHiddenCells = width * height;
             resetButton.Text = "Reset";
             time = 0;
+            timeLabel.Text = "0";
 
             foreach (DisplayCell cell in cells)
             {
@@ -474,7 +475,6 @@ namespace Minesweeper
                 cell.Btn.BackColor = hiddenCol;
             }
         }
-
         private void timer1_Tick(object sender, EventArgs e)
         {
             time++;
@@ -483,6 +483,12 @@ namespace Minesweeper
             {
                 timeLabel.Text = Convert.ToString(time/10);
             }
+        }
+        private void menuButton_Click(object sender, EventArgs e)
+        {
+            Form1 form = new Form1();
+            form.Show();
+            this.Close();
         }
     }
 }
