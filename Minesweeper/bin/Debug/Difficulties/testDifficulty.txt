@@ -1,0 +1,16 @@
+Name: 
+TEST
+Width: 
+100
+Height: 
+10
+MineCount: 
+200
+Custom: 
+true
+EasyPatterns: 
+B1,B2
+OptionalPatterns: 
+1-1CR+,2-1CR+,2-1R+
+EssentialPatterns: 
+MineCounting
