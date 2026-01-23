@@ -38,6 +38,7 @@ namespace Minesweeper.AI
             while (changed);
 
             return grid.IsSolved() && (hardestPatternFound || difficulty.EssentialPatterns.Count == 0);
+            //return hardestPatternFound || difficulty.EssentialPatterns.Count == 0;
         }
 
         private bool PassThroughGrid()

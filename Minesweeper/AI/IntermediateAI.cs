@@ -163,10 +163,17 @@ namespace Minesweeper.AI
                     grid.GetCell(perpCell.x, perpCell.y).EffectiveValue == 1 &&
                     grid.GetCell(perpCell.x, perpCell.y).AdjacentHiddenCellsCount >= 2)
                 {
-                    List<(int x, int y)> holeCells = GetHoleCells(perpCell, x, y, grid);
-
-                    if (holeCells.Count > 0)
+                    List<(int x, int y)> wallCells = GetWallCells(perpCell, x, y, grid);
+                    bool wallCellsHidden = wallCells.Count > 0;
+                    foreach ((int x, int y) wallCell in wallCells)
                     {
+                        wallCellsHidden = wallCellsHidden && grid.GetCell(wallCell.x, wallCell.y).IsHidden;
+                    }
+
+                    if (wallCellsHidden)
+                    {
+                        List<(int x, int y)> holeCells = GetHoleCells(perpCell, x, y, grid, wallCells);
+
                         bool hiddenCellExists = false;
                         foreach ((int x, int y) cellToOpen in holeCells)
                         {
@@ -180,7 +187,6 @@ namespace Minesweeper.AI
                                 if (grid.GetCell(cellToOpen.x, cellToOpen.y).IsHidden) grid.GetCell(cellToOpen.x, cellToOpen.y).Open();
                             }
 
-                            //System.Diagnostics.Debug.WriteLine("FOUND H1");
                             return true;
                         }
                     }
@@ -192,7 +198,79 @@ namespace Minesweeper.AI
         public static bool PH2(LogicCell currentCell, Grid grid, int x, int y)
         {
             if (currentCell.Value != 1 || currentCell.AdjacentHiddenCellsCount > 2) return false;
-            //System.Diagnostics.Debug.WriteLine("checking H1 at " + x + "," + y);
+            //System.Diagnostics.Debug.WriteLine("checking H2 at " + x + "," + y);
+
+            List<(int x, int y)> perpCellPoints = GetPerpendicularCellIndexes(grid, x, y);
+            foreach ((int x, int y) perpCell in perpCellPoints)
+            {
+                int xDirection = perpCell.x - x;
+                int yDirection = perpCell.y - y;
+
+                // the bit in bounds is one more in the directin than H1 as it extends the hole
+                if (grid.IsInBounds(x + xDirection * 3, y + yDirection * 3) &&
+                    !grid.GetCell(perpCell.x, perpCell.y).IsHidden &&
+                    grid.GetCell(perpCell.x, perpCell.y).Value == 1 &&
+                    grid.GetCell(perpCell.x, perpCell.y).EffectiveValue == 1 &&
+                    grid.GetCell(perpCell.x, perpCell.y).AdjacentHiddenCellsCount >= 2)
+                {
+                    List<(int x, int y)> wallCells = GetWallCells(perpCell, x, y, grid);
+                    bool wallCellsHidden = wallCells.Count > 0;
+                    foreach ((int x, int y) wallCell in wallCells)
+                    {
+                        wallCellsHidden = wallCellsHidden && grid.GetCell(wallCell.x, wallCell.y).IsHidden;
+                    }
+
+                    if (wallCellsHidden)
+                    {
+                        List<(int x, int y)> holeCells = GetHoleCells(perpCell, x, y, grid, wallCells);
+
+                        // differs from H1 here as H2 needs these to not be hidden
+                        bool allCellsAreOpen = true;
+                        foreach ((int x, int y) cellToOpen in holeCells)
+                        {
+                            allCellsAreOpen = !grid.GetCell(cellToOpen.x, cellToOpen.y).IsHidden && allCellsAreOpen;
+                        }
+
+                        if (allCellsAreOpen)
+                        {
+                            (int x, int y) holeCell = (perpCell.x + xDirection, perpCell.y + yDirection);
+
+                            if (grid.GetCell(holeCell.x, holeCell.y).Value == 1 && grid.GetCell(holeCell.x, holeCell.y).EffectiveValue == 1)
+                            {
+                                // the end2Cells are not hidden, they are the cells next to the middle cell in the hole and represnt where the walls would be so the GetHoleCells method works
+                                List<(int x, int y)> end2Cells = GetWallCells(holeCell, perpCell.x, perpCell.y, grid);
+                                List<(int x, int y)> hole2Cells = GetHoleCells(holeCell, perpCell.x, perpCell.y, grid, end2Cells);
+
+                                bool hiddenCellExists = false;
+                                foreach ((int x, int y) cellToOpen in hole2Cells)
+                                {
+                                    hiddenCellExists = grid.GetCell(cellToOpen.x, cellToOpen.y).IsHidden || hiddenCellExists;
+                                }
+
+                                if (hiddenCellExists)
+                                {
+                                    foreach ((int x, int y) cellToOpen in hole2Cells)
+                                    {
+                                        if (grid.GetCell(cellToOpen.x, cellToOpen.y).IsHidden)
+                                        {
+                                            grid.GetCell(cellToOpen.x, cellToOpen.y).Open();
+                                        }
+                                    }
+
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+        public static bool PH3(LogicCell currentCell, Grid grid, int x, int y)
+        {
+            if (currentCell.Value != 1 || currentCell.AdjacentHiddenCellsCount > 2) return false;
+            //System.Diagnostics.Debug.WriteLine("checking H3 at " + x + "," + y);
 
             List<(int x, int y)> perpCellPoints = GetPerpendicularCellIndexes(grid, x, y);
             foreach ((int x, int y) perpCell in perpCellPoints)
@@ -206,122 +284,63 @@ namespace Minesweeper.AI
                     grid.GetCell(perpCell.x, perpCell.y).EffectiveValue == 1 &&
                     grid.GetCell(perpCell.x, perpCell.y).AdjacentHiddenCellsCount >= 2)
                 {
-                    List<(int x, int y)> holeCells = GetHoleCells(perpCell, x, y, grid);
-
-                    if (holeCells.Count > 0)
+                    List<(int x, int y)> wallCells = GetWallCells(perpCell, x, y, grid);
+                    bool wallCellsHidden = wallCells.Count > 0;
+                    foreach ((int x, int y) wallCell in wallCells)
                     {
-                        bool hiddenCellExists = false;
+                        wallCellsHidden = wallCellsHidden && grid.GetCell(wallCell.x, wallCell.y).IsHidden;
+                    }
+
+                    if (wallCellsHidden)
+                    {
+                        List<(int x, int y)> holeCells = GetHoleCells(perpCell, x, y, grid, wallCells);
+
+                        // differs from H1 here as H3 needs these to not be hidden
+                        bool allCellsAreOpen = true;
                         foreach ((int x, int y) cellToOpen in holeCells)
                         {
-                            hiddenCellExists = grid.GetCell(cellToOpen.x, cellToOpen.y).IsHidden || hiddenCellExists;
+                            allCellsAreOpen = !grid.GetCell(cellToOpen.x, cellToOpen.y).IsHidden && allCellsAreOpen;
                         }
 
-                        // differs from H1 here as there must not be any hidden cells
-
-                        if (!hiddenCellExists)
+                        if (allCellsAreOpen)
                         {
-                            if ()
-                        }
-                    }
-                }
-            }
+                            // gets the cells outside and checks they are 1s with effective value 1
+                            System.Diagnostics.Debug.WriteLine("found H1 at " + x + "," + y);
+                            grid.DebugDisplayGrid();
+                            List<(int x, int y)> outsideWallCells = new List<(int x, int y)>();
+                            outsideWallCells.Add((x + yDirection, y + xDirection));
+                            outsideWallCells.Add((x - yDirection, y - xDirection));
 
-            return false;
-        }
-        public static bool PH3(LogicCell currentCell, Grid grid, int x, int y)
-        {
-            if (currentCell.Value != 1 && currentCell.AdjacentHiddenCellsCount != 2) return false;
-
-            List<(int x, int y)> perpCellPoints = GetPerpendicularCellIndexes(grid, x, y);
-            foreach ((int x, int y) perpCell in perpCellPoints)
-            {
-                if (!grid.GetCell(perpCell.x, perpCell.y).IsHidden &&
-                    grid.GetCell(perpCell.x, perpCell.y).Value == 1 &&
-                    grid.GetCell(perpCell.x, perpCell.y).EffectiveValue == 1)
-                {
-                    // splits into two sections to make it easier to handle if the hole is horisontal or vertical
-                    if (perpCell.x - x == 0)
-                    {
-                        int yOpen = (perpCell.y - y) * 2 + y;
-
-                        if (yOpen >= 0 &&
-                            yOpen < grid.Height &&
-                            x + 1 < grid.Width &&
-                            grid.GetCell(x + 1, perpCell.y).IsHidden &&
-                            x - 1 >= 0 &&
-                            grid.GetCell(x - 1, perpCell.y).IsHidden)
-                        {
-                            // starts H3
-                            // sets yCell to the same point as checked in H1
-                            bool changed = false;
-                            int yCell = (perpCell.y - y) * 2 + y;
-                            for (int xOfset = -1; xOfset <= 1; xOfset += 1)
+                            for (int i = 0; i < outsideWallCells.Count; i++)
                             {
-                                int xCell = x + xOfset;
-                                if (!grid.GetCell(xCell, yCell).IsHidden &&
-                                    grid.GetCell(xCell, yCell).Value == 1)
+                                if (grid.GetCell(outsideWallCells[i].x, outsideWallCells[i].y).Value != 1 ||
+                                    grid.GetCell(outsideWallCells[i].x, outsideWallCells[i].y).EffectiveValue != 1)
                                 {
-
-                                    if (grid.GetCell(xCell, y).Value == 1 && CellsContainEachother(grid.GetCell(xCell, yCell), grid.GetCell(xCell, y)))
-                                    {
-                                        List<LogicCell> cellsToOpen = GetNonOverlapingHiddenCells(grid.GetCell(xCell, yCell), grid.GetCell(xCell, y));
-
-                                        foreach (LogicCell cell in cellsToOpen)
-                                        {
-                                            if (cell.IsHidden)
-                                            {
-                                                cell.Open();
-                                                changed = true;
-                                            }
-                                        }
-
-                                    }
+                                    outsideWallCells.RemoveAt(i);
+                                    i--;
                                 }
                             }
 
-                            return changed;
-                        }
-                    }
-                    else
-                    {
-                        // sets xOpen to the space 1 away from the current cell in the direction of the perp cell
-                        int xOpen = (perpCell.x - x) * 2 + x;
-
-                        if (xOpen >= 0 &&
-                            xOpen < grid.Width &&
-                            y + 1 < grid.Height &&
-                            grid.GetCell(perpCell.x, y + 1).IsHidden &&
-                            y - 1 >= 0 &&
-                            grid.GetCell(perpCell.x, y - 1).IsHidden)
-                        {
-                            // starts H3
-                            // sets xCell to the same point as checked in H1
-                            bool changed = false;
-                            int xCell = (perpCell.x - x) * 2 + x;
-                            for (int yOfset = -1; yOfset <= 1; yOfset += 1)
+                            foreach ((int x, int y) outsideWallCell in outsideWallCells)
                             {
-                                int yCell = y + yOfset;
-                                if (!grid.GetCell(xCell, yCell).IsHidden &&
-                                    grid.GetCell(xCell, yCell).Value == 1)
-                                {
-                                    if (grid.GetCell(x, yCell).Value == 1 && CellsContainEachother(grid.GetCell(xCell, yCell), grid.GetCell(x, yCell)))
-                                    {
-                                        List<LogicCell> cellsToOpen = GetNonOverlapingHiddenCells(grid.GetCell(xCell, yCell), grid.GetCell(x, yCell));
+                                (int x, int y) insideWallCell = (outsideWallCell.x + xDirection * 2, outsideWallCell.y + yDirection * 2);
 
-                                        foreach (LogicCell cell in cellsToOpen)
+                                if (grid.GetCell(insideWallCell.x, insideWallCell.y).Value != 1 ||
+                                    grid.GetCell(insideWallCell.x, insideWallCell.y).EffectiveValue != 1)
+                                {
+                                    List<LogicCell> cellsToOpen = GetNonOverlapingHiddenCells(grid.GetCell(insideWallCell.x, insideWallCell.y), grid.GetCell(outsideWallCell.x, outsideWallCell.y));
+
+                                    if (cellsToOpen.Count > 0)
+                                    {
+                                        foreach (LogicCell cellToOpen in cellsToOpen)
                                         {
-                                            if (cell.IsHidden)
-                                            {
-                                                cell.Open();
-                                                changed = true;
-                                            }
+                                            cellToOpen.Open();
                                         }
 
+                                        return true;
                                     }
                                 }
                             }
-
-                            return changed;
                         }
                     }
                 }

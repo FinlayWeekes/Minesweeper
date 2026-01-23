@@ -105,14 +105,6 @@ namespace Minesweeper.AI
             int xDirection = perpCell.x - x;
             int yDirection = perpCell.y - y;
 
-            for (int i = 0; i < wallCells.Count; i++)
-            { 
-                if (!grid.GetCell(wallCells[i].x, wallCells[i].y).IsHidden)
-                {
-                    return new List<(int x, int y)>();
-                }
-            }
-
             if (wallCells.Count == 2 || (wallCells.Count == 1 && grid.GetCell(x, y).AdjacentHiddenCellsCount == 1))
             {
                 List<(int x, int y)> holeCells = new List<(int x, int y)>();
