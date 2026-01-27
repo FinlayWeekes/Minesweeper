@@ -1,0 +1,16 @@
+Name: 
+no
+Width: 
+10
+Height: 
+10
+MineCount: 
+10
+Custom: 
+true
+EasyPatterns: 
+null
+OptionalPatterns: 
+null
+EssentialPatterns: 
+null
