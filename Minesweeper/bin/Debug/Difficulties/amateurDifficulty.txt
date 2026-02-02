@@ -1,0 +1,16 @@
+Name:
+Amateur
+Width:
+12
+Height:
+12
+MineCount:
+20
+Custom:
+false
+Easy Patterns:
+B1,B2
+Optional Patterns:
+null
+Essential Patterns:
+2-1,1-1C

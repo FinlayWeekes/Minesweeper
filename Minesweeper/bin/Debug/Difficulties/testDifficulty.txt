@@ -1,0 +1,16 @@
+Name: 
+test
+Width: 
+40
+Height: 
+20
+MineCount: 
+200
+Custom: 
+true
+EasyPatterns: 
+null
+OptionalPatterns: 
+null
+EssentialPatterns: 
+MineCounting
