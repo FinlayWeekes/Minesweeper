@@ -8,34 +8,56 @@ using System.Threading.Tasks;
 
 namespace Minesweeper.AI
 {
-    struct HiddenCell
-    {
-        public bool IsFlagged;
-        public List<int> AdjacentRevCellIndexes;
-        public List<int> AdjacentFullCellIndexes;
-    }
-    struct RevealedCell
-    {
-        public int EffectiveValue;
-    }
     class Frontier
     {
-        public RevealedCell[] revealedCells;
-        public HiddenCell[] hiddenCells;
+        private struct HiddenCell
+        {
+            public bool IsFlagged;
+            public List<int> AdjacentRevCellIndexes;
+            public List<int> AdjacentFullCellIndexes;
+        }
+        private struct RevealedCell
+        {
+            public int EffectiveValue;
+        }
 
-        private int[] minMinesForFlag;
-        private int[] minMinesForEmpty;
+        private RevealedCell[] revealedCells;
+        private HiddenCell[] hiddenCells;
 
-        private int MaxMines;
+        private HashSet<int>[] posMinesForFlag;
+        private HashSet<int>[] posMinesForEmpty;
+
+        public HashSet<int> PosMineCounts;
+
+        public int MinMinesInFront
+        { 
+            get
+            {
+                return minMinesInFront;
+            }
+        }
+        private int minMinesInFront;
+        public int MaxMinesInFront
+        {
+            get
+            {
+                return maxMinesInFront;
+            }
+        }
+        private int maxMinesInFront;
+
+
+        private int minMines;
+        private int maxMines;
+
         private int HiddenCellsCount;
 
         private int[] hiddenCellIDs;
 
-        private int MinMines;
-
-        public Frontier((int value, List<int> adjacentIDs)[] frontierRevCells, int hiddenMinesCount, int maxMines)
+        public Frontier((int value, List<int> adjacentIDs)[] frontierRevCells, int hiddenMinesCount, int maxMines, int minMines)
         {
-            this.MaxMines = maxMines;
+            this.minMines = minMines;
+            this.maxMines = maxMines;
             this.HiddenCellsCount = hiddenMinesCount;
 
             // hidden cell IDs are used to match each revealed cell to thier adjacent hidden cells
@@ -48,12 +70,12 @@ namespace Minesweeper.AI
 
             // there is a value for each hidden cell based on its index
             // it will store the minimum number of mines required for the condition of the array to be true
-            minMinesForFlag = new int[hiddenMinesCount];
-            minMinesForEmpty = new int[hiddenMinesCount];
+            posMinesForFlag = new HashSet<int>[hiddenMinesCount];
+            posMinesForEmpty = new HashSet<int>[hiddenMinesCount];
             for (int i = 0; i < hiddenMinesCount; i++)
-            { 
-                minMinesForFlag[i] = maxMines + 1;
-                minMinesForEmpty[i] = maxMines + 1;
+            {
+                posMinesForFlag[i] = new HashSet<int>();
+                posMinesForEmpty[i] = new HashSet<int>();
             }
 
             // starts with the cells not being flagged
@@ -117,76 +139,62 @@ namespace Minesweeper.AI
         
         
         // Methods used for the actual mine counting
-        public bool StartCounting()
+        public void StartCounting()
         {
             LetCellBeEmpty(0, 0);
             LetCellBeFlagged(0, 0);
 
-            for (int i = 0; i < minMinesForEmpty.Length; i++)
-            {
-                if (minMinesForEmpty[i] == MaxMines + 1)
-                {
-                    System.Diagnostics.Debug.WriteLine("cell " + hiddenCellIDs[i] + " can be flagged");
-                }
-            }
-            for (int i = 0; i < minMinesForFlag.Length; i++)
-            {
-                if (minMinesForFlag[i] == MaxMines + 1)
-                {
-                    System.Diagnostics.Debug.WriteLine("cell " + hiddenCellIDs[i] + " can be opened");
-                }
-            }
-            System.Diagnostics.Debug.WriteLine("MIN MINES FOR EMPTY");
-            for (int i = 0; i < minMinesForEmpty.Length; i++)
-            {
-                if (minMinesForEmpty[i] != MaxMines + 1 && minMinesForFlag[i] != MaxMines + 1)
-                {
-                    System.Diagnostics.Debug.WriteLine("cell " + hiddenCellIDs[i] + ": " + minMinesForEmpty[i]);
-                }
-            }
-            System.Diagnostics.Debug.WriteLine("MIN MINES FOR FLAG");
-            for (int i = 0; i < minMinesForFlag.Length; i++)
-            {
-                if (minMinesForEmpty[i] != MaxMines + 1 && minMinesForFlag[i] != MaxMines + 1)
-                {
-                    System.Diagnostics.Debug.WriteLine("cell " + hiddenCellIDs[i] + ": " + minMinesForFlag[i]);
-                }
-            }
+            FindPosMineCounts();
 
-            return false;
+            maxMinesInFront = PosMineCounts.Max();
+            minMinesInFront = PosMineCounts.Min();
         }
-        private int LetCellBeEmpty(int flagsPlaced, int index)
+        private HashSet<int> LetCellBeEmpty(int flagsPlaced, int index)
         {
-            if (index == hiddenCells.Length) return flagsPlaced;
+            HashSet<int> posNumberOfFlags = new HashSet<int>();
 
-            if (SkipedNonCompletedCell(hiddenCells[index].AdjacentFullCellIndexes, revealedCells)) return MaxMines + 1;
+            if (index == hiddenCells.Length)
+            {
+                if (flagsPlaced <= maxMines && flagsPlaced >= minMines) posNumberOfFlags.Add(flagsPlaced);
+                return posNumberOfFlags;
+            }
+
+            // returns empty list if cell cany be empty
+            if (SkipedNonCompletedCell(hiddenCells[index].AdjacentFullCellIndexes, revealedCells)) return posNumberOfFlags;
 
             int newIndex = index + 1;
 
-            int minMines = Math.Min(LetCellBeEmpty(flagsPlaced, newIndex),
-                                    LetCellBeFlagged(flagsPlaced, newIndex));
+            posNumberOfFlags.UnionWith(LetCellBeEmpty(flagsPlaced, newIndex));
+            posNumberOfFlags.UnionWith(LetCellBeFlagged(flagsPlaced, newIndex));
 
-            minMinesForEmpty[index] = Math.Min(minMinesForEmpty[index], minMines);
+            posMinesForEmpty[index].UnionWith(posNumberOfFlags);
 
-            return minMines;
+            return posNumberOfFlags;
         }
-        private int LetCellBeFlagged(int flagsPlaced, int index)
+        private HashSet<int> LetCellBeFlagged(int flagsPlaced, int index)
         {
-            if (index == hiddenCells.Length) return flagsPlaced;
+            HashSet<int> posNumberOfFlags = new HashSet<int>();
+            
+            if (index == hiddenCells.Length)
+            {
+                if (flagsPlaced <= maxMines && flagsPlaced >= minMines) posNumberOfFlags.Add(flagsPlaced);
+                return posNumberOfFlags;
+            }
 
+            // returns an empty list and undos the flag if it is not possible
             List<int> revCellsVisited = new List<int>();
-            if (FlagCell(ref flagsPlaced, index, revCellsVisited)) return MaxMines + 1;
+            if (FlagCell(ref flagsPlaced, index, revCellsVisited)) return posNumberOfFlags;
 
             int newIndex = index + 1;
 
-            int minMines = Math.Min(LetCellBeEmpty(flagsPlaced, newIndex),
-                                    LetCellBeFlagged(flagsPlaced, newIndex));
+            posNumberOfFlags.UnionWith(LetCellBeEmpty(flagsPlaced, newIndex));
+            posNumberOfFlags.UnionWith(LetCellBeFlagged(flagsPlaced, newIndex));
 
-            minMinesForFlag[index] = Math.Min(minMinesForFlag[index], minMines);
+            posMinesForFlag[index].UnionWith(posNumberOfFlags);
             
             UndoFlagCell(ref flagsPlaced, index, revCellsVisited);
 
-            return minMines;
+            return posNumberOfFlags;
         }
         private void UndoFlagCell(ref int flagsPlaced, int index, List<int> revCellsVisited)
         {
@@ -200,7 +208,7 @@ namespace Minesweeper.AI
         private bool FlagCell(ref int flagsPlaced, int index, List<int> revCellsVisited)
         {
             // returns true if that cell cant be flagged in this situation
-            if (MaxMines == flagsPlaced) return true;
+            if (maxMines == flagsPlaced) return true;
 
             hiddenCells[index].IsFlagged = true;
             flagsPlaced++;
@@ -227,6 +235,126 @@ namespace Minesweeper.AI
             }
 
             return false;
+        }
+
+
+
+        private void FindPosMineCounts()
+        {
+            PosMineCounts = new HashSet<int>();
+            foreach (HashSet<int> set in posMinesForEmpty)
+            {
+                PosMineCounts.UnionWith(set);
+            }
+            foreach (HashSet<int> set in posMinesForFlag)
+            {
+                PosMineCounts.UnionWith(set);
+            }
+        }
+        public void PruneWithNewPossibleValues()
+        {
+            foreach (HashSet<int> set in posMinesForEmpty)
+            {
+                // needs the extra hashset because removing items in a foreach loop of the set you are removing from does not work
+                HashSet<int> valsToRemove = new HashSet<int>();
+
+                foreach (int val in set)
+                {
+                    if (!PosMineCounts.Contains(val)) valsToRemove.Add(val);
+                }
+
+                foreach (int val in valsToRemove)
+                {
+                    set.Remove(val);
+                }
+            }
+            foreach (HashSet<int> set in posMinesForFlag)
+            {
+                HashSet<int> valsToRemove = new HashSet<int>();
+
+                foreach (int val in set)
+                {
+                    if (!PosMineCounts.Contains(val)) valsToRemove.Add(val);
+                }
+
+                foreach (int val in valsToRemove)
+                {
+                    set.Remove(val);
+                }
+            }
+        }
+            
+        public bool ExcecuteFoundValues(Grid grid)
+        {
+            bool changed = false;
+            // opens all cells which cannot be flagged
+            for (int i = 0; i < posMinesForFlag.Length; i++)
+            {
+                if (posMinesForFlag[i].Count == 0)
+                {
+                    changed = true;
+                    grid.GetCellTup(IDToPoint(hiddenCellIDs[i], grid.Width, grid.Height)).Open();
+                }
+            }
+            // flags all cells which cannot be opened
+            for (int i = 0; i < posMinesForEmpty.Length; i++)
+            {
+                if (posMinesForEmpty[i].Count == 0)
+                {
+                    changed = true;
+                    grid.GetCellTup(IDToPoint(hiddenCellIDs[i], grid.Width, grid.Height)).Flag();
+                }
+            }
+
+            return changed;
+        }
+        public (int x, int y) IDToPoint(int id, int width, int height)
+        {
+            return (id % width, id / height);
+        }
+
+        public void DebugData()
+        {
+            for (int i = 0; i < posMinesForEmpty.Length; i++)
+            {
+                if (posMinesForEmpty[i].Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("cell " + hiddenCellIDs[i] + ": can be flagged");
+                }
+            }
+            for (int i = 0; i < posMinesForEmpty.Length; i++)
+            {
+                if (posMinesForFlag[i].Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("cell " + hiddenCellIDs[i] + ": can be opened");
+                }
+            }
+            System.Diagnostics.Debug.WriteLine("MINE AMOUNTS IN FRONTIER FOR EMPTY CELL");
+            for (int i = 0; i < posMinesForEmpty.Length; i++)
+            {
+                if (posMinesForEmpty[i].Count != 0 && posMinesForFlag[i].Count != 0)
+                {
+                    System.Diagnostics.Debug.Write("cell " + hiddenCellIDs[i] + ": ");
+                    foreach (int val in posMinesForEmpty[i])
+                    {
+                        System.Diagnostics.Debug.Write(val + ", ");
+                    }
+                    System.Diagnostics.Debug.WriteLine("");
+                }
+            }
+            System.Diagnostics.Debug.WriteLine("MINE AMOUNTS IN FRONTIER FOR FLAGGED CELL");
+            for (int i = 0; i < posMinesForFlag.Length; i++)
+            {
+                if (posMinesForEmpty[i].Count != 0 && posMinesForFlag[i].Count != 0)
+                {
+                    System.Diagnostics.Debug.Write("cell " + hiddenCellIDs[i] + ": ");
+                    foreach (int val in posMinesForFlag[i])
+                    {
+                        System.Diagnostics.Debug.Write(val + ", ");
+                    }
+                    System.Diagnostics.Debug.WriteLine("");
+                }
+            }
         }
     }
 }

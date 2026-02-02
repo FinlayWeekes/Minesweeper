@@ -10,6 +10,12 @@ namespace Minesweeper.AI
     {
         List<Frontier> frontiers;
         Grid grid;
+        int leftoverHidCellCount;
+        int minMinesTotal;
+        int maxMinesTotal;
+        int minMinesOfAllFronts;
+        int maxMinesOfAllFronts;
+        HashSet<int> totalPosMineCounts;
         public MineCounting(Grid grid)
         {
             this.grid = grid;
@@ -19,20 +25,117 @@ namespace Minesweeper.AI
         {
             grid.DebugDisplayGrid();
 
-            this.frontiers = FindFrontiers(grid);
+            this.maxMinesTotal = grid.MineCount;
+
+            leftoverHidCellCount = FindLeftoverHidCells();
+            minMinesTotal = Math.Min(maxMinesTotal - leftoverHidCellCount, 0);
+
+            frontiers = FindFrontiers(grid);
+
             if (frontiers.Count == 0) return false;
 
+            // fills out the PosMinesForFlag and PosMinesForEmpty array of hashset of int for each frontier
+            // also sums up their min and max number of mines in the same loop
+            minMinesOfAllFronts = 0;
+            maxMinesOfAllFronts = 0;
             foreach (Frontier frontier in frontiers)
             {
                 frontier.StartCounting();
+                minMinesOfAllFronts += frontier.MinMinesInFront;
+                maxMinesOfAllFronts += frontier.MaxMinesInFront;
+            }
+
+            // sums up every possible total mine count with the given frontier counts
+            totalPosMineCounts = FindTotalPosCounts();
+
+            foreach (Frontier frontier in frontiers)
+            {
+                int minCountOtherFronts = minMinesOfAllFronts - frontier.MinMinesInFront;
+                int maxCountOtherFronts = maxMinesOfAllFronts - frontier.MaxMinesInFront;
+
+                HashSet<int> validCounts = new HashSet<int>();
+
+                foreach (int val in frontier.PosMineCounts)
+                {
+                    if (MineCountIsValid(val, frontier, minCountOtherFronts, maxCountOtherFronts)) validCounts.Add(val);
+                }
+
+                frontier.PosMineCounts = validCounts;
+            }
+
+            foreach (Frontier frontier in frontiers)
+            {
+                frontier.PruneWithNewPossibleValues();
+            }
+
+            bool changed = false;
+            foreach (Frontier frontier in frontiers)
+            {
+                System.Diagnostics.Debug.WriteLine("");
+                frontier.DebugData();
+                changed = frontier.ExcecuteFoundValues(grid) || changed;
+            }
+
+            System.Diagnostics.Debug.WriteLine("done minecounting");
+            grid.DebugDisplayGrid();
+
+            return changed;
+        }
+
+        private bool MineCountIsValid(int count, Frontier frontier, int minCountOtherFronts, int maxCountOtherFronts)
+        {
+            foreach (int possibleCount in totalPosMineCounts)
+            {
+                int remaningMines = possibleCount - count;
+
+                if (remaningMines >= minCountOtherFronts && remaningMines <= maxCountOtherFronts)
+                {
+                    return true; 
+                }
             }
 
             return false;
         }
 
+        private HashSet<int> FindTotalPosCounts()
+        {
+            HashSet<int> prevMineCounts = new HashSet<int>();
+            prevMineCounts.Add(0);
 
+            foreach (Frontier frontier in frontiers)
+            {
+                HashSet<int> nextSet = new HashSet<int>();
 
+                foreach (int prevCount in prevMineCounts)
+                {
+                    foreach (int thisCount in frontier.PosMineCounts)
+                    {
+                        nextSet.Add(prevCount + thisCount);
+                    }
+                }
 
+                prevMineCounts = nextSet;
+            }
+
+            return prevMineCounts;
+        }
+        private int FindLeftoverHidCells()
+        {
+            int cellCount = 0;
+            for (int y = 0; y < grid.Height; y++)
+            {
+                for (int x = 0; x < grid.Width; x++)
+                {
+                    if (grid.GetCell(x, y).IsHidden &&
+                        !grid.GetCell(x, y).IsFlagged &&
+                        !CellIsAdjacentToOpen(grid.GetCell(x, y)))
+                    {
+                        leftoverHidCellCount++;
+                    }
+                }
+            }
+            return cellCount;
+        }
 
         // methods used to find the forntiers
         private List<Frontier> FindFrontiers(Grid grid)
@@ -70,7 +173,7 @@ namespace Minesweeper.AI
                             System.Diagnostics.Debug.WriteLine("COUNT: " + frontCells.Count);
 
 
-                            fronts.Add(new Frontier(frontierRevCellsInfo, frontCells.Count, grid.MineCount));
+                            fronts.Add(new Frontier(frontierRevCellsInfo, frontCells.Count, maxMinesTotal, minMinesTotal));
                         }
                     }
                 }
