@@ -1,11 +1,11 @@
 Name: 
 test
 Width: 
-10
+16
 Height: 
-10
+16
 MineCount: 
-10
+40
 Custom: 
 true
 EasyPatterns: 

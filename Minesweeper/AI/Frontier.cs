@@ -29,6 +29,14 @@ namespace Minesweeper.AI
 
         public HashSet<int> PosMineCounts;
 
+        public int Size
+        {
+            get
+            {
+                return hiddenCellIDs.Length;
+            }
+        }
+
         public int MinMinesInFront
         { 
             get
@@ -46,18 +54,15 @@ namespace Minesweeper.AI
         }
         private int maxMinesInFront;
 
-
-        private int minMines;
         private int maxMines;
 
         private int HiddenCellsCount;
 
         private int[] hiddenCellIDs;
 
-        public Frontier((int value, List<int> adjacentIDs)[] frontierRevCells, int hiddenMinesCount, int maxMines, int minMines)
+        public Frontier((int value, List<int> adjacentIDs)[] frontierRevCells, int hiddenMinesCount, int maxMines)
         {
-            this.minMines = minMines;
-            this.maxMines = maxMines;
+            this.maxMines = Math.Min(maxMines, hiddenMinesCount);
             this.HiddenCellsCount = hiddenMinesCount;
 
             // hidden cell IDs are used to match each revealed cell to thier adjacent hidden cells
@@ -155,7 +160,7 @@ namespace Minesweeper.AI
 
             if (index == hiddenCells.Length)
             {
-                if (flagsPlaced <= maxMines && flagsPlaced >= minMines) posNumberOfFlags.Add(flagsPlaced);
+                posNumberOfFlags.Add(flagsPlaced);
                 return posNumberOfFlags;
             }
 
@@ -177,7 +182,7 @@ namespace Minesweeper.AI
             
             if (index == hiddenCells.Length)
             {
-                if (flagsPlaced <= maxMines && flagsPlaced >= minMines) posNumberOfFlags.Add(flagsPlaced);
+                posNumberOfFlags.Add(flagsPlaced);
                 return posNumberOfFlags;
             }
 
@@ -213,6 +218,12 @@ namespace Minesweeper.AI
             hiddenCells[index].IsFlagged = true;
             flagsPlaced++;
 
+            if (ExceedingMaxMines(index, flagsPlaced))
+            {
+                UndoFlagCell(ref flagsPlaced, index, revCellsVisited);
+                return true;
+            }
+
             foreach (int cellIndex in hiddenCells[index].AdjacentRevCellIndexes)
             {
                 revealedCells[cellIndex].EffectiveValue--;
@@ -225,7 +236,13 @@ namespace Minesweeper.AI
                 }
             }
 
-            return SkipedNonCompletedCell(hiddenCells[index].AdjacentFullCellIndexes, revealedCells);
+            if  (SkipedNonCompletedCell(hiddenCells[index].AdjacentFullCellIndexes, revealedCells))
+            {
+                UndoFlagCell(ref flagsPlaced, index, revCellsVisited);
+                return true;
+            }
+
+            return false;
         }
         private bool SkipedNonCompletedCell(List<int> adjacentFullCellIndexes, RevealedCell[] revealedCells)
         {
@@ -235,6 +252,11 @@ namespace Minesweeper.AI
             }
 
             return false;
+        }
+        private bool ExceedingMaxMines(int index, int flagsPlaced)
+        {
+            int remaningPosFlags = maxMines - flagsPlaced;
+            return remaningPosFlags < 0;
         }
 
 
@@ -267,6 +289,9 @@ namespace Minesweeper.AI
                 {
                     set.Remove(val);
                 }
+
+                maxMinesInFront = PosMineCounts.Max();
+                minMinesInFront = PosMineCounts.Min();
             }
             foreach (HashSet<int> set in posMinesForFlag)
             {
@@ -293,7 +318,9 @@ namespace Minesweeper.AI
                 if (posMinesForFlag[i].Count == 0)
                 {
                     changed = true;
-                    grid.GetCellTup(IDToPoint(hiddenCellIDs[i], grid.Width, grid.Height)).Open();
+                    LogicCell cellToOpen = grid.GetCellTup(IDToPoint(hiddenCellIDs[i], grid.Width, grid.Height));
+
+                    if (cellToOpen.IsHidden) cellToOpen.Open();
                 }
             }
             // flags all cells which cannot be opened
@@ -302,7 +329,9 @@ namespace Minesweeper.AI
                 if (posMinesForEmpty[i].Count == 0)
                 {
                     changed = true;
-                    grid.GetCellTup(IDToPoint(hiddenCellIDs[i], grid.Width, grid.Height)).Flag();
+                    LogicCell cellToFlag = grid.GetCellTup(IDToPoint(hiddenCellIDs[i], grid.Width, grid.Height));
+
+                    if (!cellToFlag.IsFlagged) cellToFlag.Flag();
                 }
             }
 
@@ -310,7 +339,7 @@ namespace Minesweeper.AI
         }
         public (int x, int y) IDToPoint(int id, int width, int height)
         {
-            return (id % width, id / height);
+            return (id % width, id / width);
         }
 
         public void DebugData()

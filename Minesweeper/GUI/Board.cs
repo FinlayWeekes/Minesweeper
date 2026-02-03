@@ -176,7 +176,9 @@ namespace Minesweeper.GUI
                 grid.GetCell(firstCol, firstRow).Open();
 
                 solver = new Solver(difficulty, grid);
-                //solver.IsSolvable();
+                //if (solver.IsSolvable()) solvableCount++;
+                //System.Diagnostics.Debug.WriteLine("solved " + solvableCount);
+
                 //System.Diagnostics.Debug.WriteLine("Solved");
             }
             while (!solver.IsSolvable());
