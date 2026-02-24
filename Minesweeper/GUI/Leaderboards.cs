@@ -15,7 +15,7 @@ using System.Windows.Forms;
 
 namespace Minesweeper.GUI
 {
-    public partial class Leaderboards : Form
+    public partial class Leaderboards : BaseForm
     {
         public Leaderboards()
         {
@@ -148,12 +148,7 @@ namespace Minesweeper.GUI
         {
             Menu form = new Menu();
             form.Show();
-            this.Close();
+            this.Hide();
         }
-        private void masterTitle_Click(object sender, EventArgs e)
-        {
-            this.BackgroundImage = Resources.dif5;
-        }
-
     }
 }

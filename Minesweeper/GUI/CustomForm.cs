@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace Minesweeper.GUI
 {
-    public partial class CustomForm : Form
+    public partial class CustomForm : BaseForm
     {
         private bool lightMode;
         private string username;
@@ -465,7 +465,7 @@ namespace Minesweeper.GUI
         {
             Menu form = new Menu();
             form.Show();
-            this.Close();
+            this.Hide();
         }
     }
 }

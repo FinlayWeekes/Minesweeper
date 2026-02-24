@@ -104,7 +104,6 @@
             this.masterTitle.Size = new System.Drawing.Size(103, 37);
             this.masterTitle.TabIndex = 5;
             this.masterTitle.Text = "Master";
-            this.masterTitle.Click += new System.EventHandler(this.masterTitle_Click);
             // 
             // beginnerTimes
             // 

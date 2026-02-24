@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Minesweeper.GUI
 {
-    public partial class Menu : Form
+    public partial class Menu : BaseForm
     {
         private string name;
         private bool lightMode;
@@ -26,7 +26,7 @@ namespace Minesweeper.GUI
 
             lightMode = false;
         }
-        
+
         private void OpenBoard(Difficulty difficulty)
         {
             // updateRecentName will return false if the name isnt valid

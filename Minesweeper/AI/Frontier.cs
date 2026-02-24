@@ -146,10 +146,8 @@ namespace Minesweeper.AI
         // Methods used for the actual mine counting
         public void StartCounting()
         {
-            LetCellBeEmpty(0, 0);
-            LetCellBeFlagged(0, 0);
-
-            FindPosMineCounts();
+            PosMineCounts = LetCellBeEmpty(0, 0);
+            PosMineCounts.UnionWith(LetCellBeFlagged(0, 0));
 
             maxMinesInFront = PosMineCounts.Max();
             minMinesInFront = PosMineCounts.Min();
@@ -258,18 +256,6 @@ namespace Minesweeper.AI
             int remaningPosFlags = maxMines - flagsPlaced;
             return remaningPosFlags < 0;
         }
-        private void FindPosMineCounts()
-        {
-            PosMineCounts = new HashSet<int>();
-            foreach (HashSet<int> set in posMinesForEmpty)
-            {
-                PosMineCounts.UnionWith(set);
-            }
-            foreach (HashSet<int> set in posMinesForFlag)
-            {
-                PosMineCounts.UnionWith(set);
-            }
-        }
         
         public void PruneWithNewPossibleValues()
         {
@@ -311,6 +297,13 @@ namespace Minesweeper.AI
             
         public bool ExcecuteFoundValues(Grid grid)
         {
+            bool changed = CheckForOpenCells(grid);
+            changed = CheckForFlaggedCells(grid) || changed;
+
+            return changed;
+        }
+        public bool CheckForOpenCells(Grid grid)
+        {
             bool changed = false;
             // opens all cells which cannot be flagged
             for (int i = 0; i < posMinesForFlag.Length; i++)
@@ -323,7 +316,12 @@ namespace Minesweeper.AI
                     if (cellToOpen.IsHidden) cellToOpen.Open();
                 }
             }
-            // flags all cells which cannot be opened
+            return changed;
+        }
+        public bool CheckForFlaggedCells(Grid grid)
+        {
+            bool changed = false;
+            // opens all cells which cannot be opened
             for (int i = 0; i < posMinesForEmpty.Length; i++)
             {
                 if (posMinesForEmpty[i].Count == 0)
@@ -334,10 +332,9 @@ namespace Minesweeper.AI
                     if (!cellToFlag.IsFlagged) cellToFlag.Flag();
                 }
             }
-
             return changed;
         }
-        
+
         public (int x, int y) IDToPoint(int id, int width, int height)
         {
             return (id % width, id / width);

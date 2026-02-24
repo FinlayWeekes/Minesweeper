@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace Minesweeper.GUI
 {
-    public partial class Board : Form
+    public partial class Board : BaseForm
     {
         private DisplayCell[,] cells;
         private Difficulty difficulty;
@@ -614,7 +614,7 @@ namespace Minesweeper.GUI
             Menu form = new Menu();
             form.Show();
             CloseStatsForm();
-            this.Close();
+            this.Hide();
         }
 
         // Timer

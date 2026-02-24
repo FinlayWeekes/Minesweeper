@@ -1,4 +1,6 @@
-﻿namespace Minesweeper.GUI
+﻿using System.Windows.Forms;
+
+namespace Minesweeper.GUI
 {
     partial class CustomForm
     {
@@ -18,6 +20,11 @@
                 components.Dispose();
             }
             base.Dispose(disposing);
+        }
+        private void Form_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (Application.OpenForms.Count == 0)
+                Application.Exit();
         }
 
         #region Windows Form Designer generated code

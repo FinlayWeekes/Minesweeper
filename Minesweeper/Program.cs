@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Policy;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
@@ -47,7 +48,9 @@ namespace Minesweeper
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Minesweeper.GUI.Menu());
+            Minesweeper.GUI.Menu menu = new Minesweeper.GUI.Menu();
+            menu.Show();
+            Application.Run();
         }
 
 
@@ -69,5 +72,17 @@ namespace Minesweeper
         {
             return "Difficulty Data/Mean Time Taken/" + name + "MeanTime.txt";
         }
+    }
+}
+
+public class BaseForm : Form
+{
+    public BaseForm()
+    {
+        this.FormClosing += OnFormClosing;
+    }
+    private void OnFormClosing(object sender, FormClosingEventArgs e)
+    {
+        Application.Exit();
     }
 }

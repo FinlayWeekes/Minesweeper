@@ -28,7 +28,7 @@ namespace Minesweeper.AI
             this.maxMinesTotal = grid.GetMineCount();
 
             leftoverCells = FindLeftoverHidCells();
-            
+
             minMinesTotal = Math.Max(maxMinesTotal - leftoverCells.Count, 0);
 
             frontiers = FindFrontiers(grid);
@@ -61,9 +61,9 @@ namespace Minesweeper.AI
             {
                 frontier.StartCounting();
 
-                // checks if the frontier has found any solutions and exectues them
-                // returns true if so as solving frontiers is very expesive and 
-                if (frontier.ExcecuteFoundValues(grid)) return false;
+                // checks if the frontier has found any openable cells and opens them
+                // returns true if so as solving frontiers is very expesive  
+                if (frontier.CheckForOpenCells(grid)) return true;
             }
 
             // sums up every possible total mine count with the given frontier counts
@@ -78,7 +78,7 @@ namespace Minesweeper.AI
 
             // removes invalid mine counts from each frontier's PosMineCounts
             // invalid counts which are above/below min/max are already removed
-            // this takes into account the action combinations of counts and removes any counts which when added with any of the other mine counts from other frontiers are invalid
+            // this takes into account the actual combinations of counts and removes any counts which when added with any of the other mine counts from other frontiers are invalid
             foreach (Frontier frontier in frontiers)
             {
                 int minCountOtherFronts = minMinesOfAllFronts - frontier.MinMinesInFront;
@@ -88,7 +88,7 @@ namespace Minesweeper.AI
 
                 foreach (int val in frontier.PosMineCounts)
                 {
-                    if (MineCountIsValid(val, frontier, minCountOtherFronts, maxCountOtherFronts)) validCounts.Add(val);
+                    if (MineCountIsValid(val, minCountOtherFronts, maxCountOtherFronts)) validCounts.Add(val);
                 }
 
                 frontier.PosMineCounts = validCounts;
@@ -109,23 +109,22 @@ namespace Minesweeper.AI
                 changed = frontier.ExcecuteFoundValues(grid) || changed;
             }
 
-            // checks if the minimum number of mines found is equal to the maximum possible mines,
-            // meaning that all leftover cells must be empty, so can be opened
-            minMinesOfAllFronts = FindSumOfMinCount();
-            if (minMinesOfAllFronts == maxMinesTotal)
-            {
-                OpenLeftoverCells();
+            if (leftoverCells.Count > 0)
+            { 
+                // checks if the minimum number of mines found is equal to the maximum possible mines,
+                // meaning that all leftover cells must be empty, so can be opened
+                minMinesOfAllFronts = FindSumOfMinCount();
+                if (minMinesOfAllFronts == maxMinesTotal)
+                {
+                    changed = OpenLeftoverCells() || changed;
+                }
 
-                changed = changed || leftoverCells.Count > 0;
-            }
-
-            // can flag all the leftover cells if the maximum posible mines in the front is equal too the maximum number of mines take away the number of leftover cells
-            maxMinesOfAllFronts = FindSumOfMaxCount();
-            if (maxMinesOfAllFronts == grid.GetMineCount() - leftoverCells.Count)
-            {
-                FlagLeftoverCells();
-
-                changed = changed || leftoverCells.Count > 0;
+                // can flag all the leftover cells if the maximum posible mines in the front is equal too the maximum number of mines take away the number of leftover cells
+                maxMinesOfAllFronts = FindSumOfMaxCount();
+                if (maxMinesOfAllFronts + leftoverCells.Count == maxMinesTotal)
+                {
+                    changed = FlagLeftoverCells() || changed;
+                }
             }
 
             //System.Diagnostics.Debug.WriteLine("done minecounting");
@@ -179,7 +178,7 @@ namespace Minesweeper.AI
                 totalPosMineCounts.Remove(val);
             }
         }
-        private bool MineCountIsValid(int count, Frontier frontier, int minCountOtherFronts, int maxCountOtherFronts)
+        private bool MineCountIsValid(int count, int minCountOtherFronts, int maxCountOtherFronts)
         {
             foreach (int possibleCount in totalPosMineCounts)
             {
@@ -347,9 +346,9 @@ namespace Minesweeper.AI
             {
                 if (!checkedCells.Contains(adjacentCell))
                 {
-                    if (adjacentCell.IsHidden && !adjacentCell.IsFlagged)
+                    if (adjacentCell.IsHidden)
                     {
-                        if (adjacentCell.IsAdjacentToOpen())
+                        if (!adjacentCell.IsFlagged && adjacentCell.IsAdjacentToOpen())
                         {
                             GetFrontHiddenCellsAt(adjacentCell, frontCells, checkedCells);
                         }

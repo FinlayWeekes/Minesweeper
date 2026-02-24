@@ -54,6 +54,7 @@ namespace Minesweeper.AI
                 return false;
             }
 
+            return true;
             return isSolved;
         }
 
