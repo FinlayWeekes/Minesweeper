@@ -1,6 +1,7 @@
 ﻿using Minesweeper.AI;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -129,7 +130,7 @@ namespace Minesweeper.GUI
 
 
         // handles getting the data the user selected
-        private (HashSet<string> easyPatternNames, HashSet<string> optionalPatternNames, HashSet<string> essentialPatternNames) GetSelectedPatternNames()
+        private (HashSet<string> easyPatternNames, HashSet<string> optionalPatternNames, HashSet<string> essentialPatternNames, bool valid) GetSelectedPatternNames()
         {
             // puts the selected beginner patterns in easy patterns
             HashSet<string> easyPatterns = new HashSet<string>();
@@ -160,7 +161,14 @@ namespace Minesweeper.GUI
                 }
             }
 
-            return (easyPatterns, optionalPatterns, essentialPatterns);
+            // makes sure there isnt just optional patterns selected. It is ok if it is just optional if it is exactly: B1, B2 or mine counting that is selected
+            bool invalid = easyPatterns.Count == 0 && optionalPatterns.Count > 0 && essentialPatterns.Count == 0 && !(optionalPatterns.Count == 1 && optionalPatterns.Single() == "MineCounting");
+            if (invalid)
+            {
+                OutputToUser("Must select at least one required pattern,\nor no patterns at all", true);
+            }
+
+            return (easyPatterns, optionalPatterns, essentialPatterns, !invalid);
         }
         private (int width, int height, int mineCount, string name, bool valid) GetBoardData()
         {
@@ -184,6 +192,11 @@ namespace Minesweeper.GUI
                 OutputToUser("Height value must be positive", true);
                 return (width, height, mineCount, name, valid);
             }
+            if (height > Program.MaxCustomDifSize)
+            {
+                OutputToUser("Height must be less than " + Program.MaxCustomDifSize, true);
+                return (width, height, mineCount, name, valid);
+            }
 
             try
             {
@@ -199,7 +212,18 @@ namespace Minesweeper.GUI
                 OutputToUser("Width value must be positive", true);
                 return (width, height, mineCount, name, valid);
             }
-                
+            if (width > Program.MaxCustomDifSize)
+            {
+                OutputToUser("Width must be less than " + Program.MaxCustomDifSize, true);
+                return (width, height, mineCount, name, valid);
+            }
+            if (width * height > Program.MaxCustomDifSize)
+            {
+                OutputToUser("Grid size must be less than " + Program.MaxCustomDifSize, true);
+                return (width, height, mineCount, name, valid);
+            }
+
+
             bool mineCountFound = false;
             if (!String.IsNullOrEmpty(mineCountTextBox.Text))
             {
@@ -419,8 +443,9 @@ namespace Minesweeper.GUI
             (int width, int height, int mineCount, string name, bool valid) dataTup = GetBoardData();
             if (!dataTup.valid) return;
 
-            (HashSet<string> easyPatternNames, HashSet<string> optionalPatternNames, HashSet<string> essentialPatternNames) paternNamesTup = GetSelectedPatternNames();
-            
+            (HashSet<string> easyPatternNames, HashSet<string> optionalPatternNames, HashSet<string> essentialPatternNames, bool valid) paternNamesTup = GetSelectedPatternNames();
+            if (!paternNamesTup.valid) return;
+
             // has already checked that the minecount is less than width x height
             // needs to check if its possible for the adjacent cell to be clear in every situation (only not random boards)
             // takes into account boards with a dimension less than 4
@@ -455,7 +480,8 @@ namespace Minesweeper.GUI
                 return;
             }
 
-            (HashSet<string> easyPatternNames, HashSet<string> optionalPatternNames, HashSet<string> essentialPatternNames) paternNamesTup = GetSelectedPatternNames();
+            (HashSet<string> easyPatternNames, HashSet<string> optionalPatternNames, HashSet<string> essentialPatternNames, bool valid) paternNamesTup = GetSelectedPatternNames();
+            if (!paternNamesTup.valid) return;
 
             CreateNewDifFile(dataTup.name, dataTup.height, dataTup.width, dataTup.mineCount, paternNamesTup.easyPatternNames, paternNamesTup.optionalPatternNames, paternNamesTup.essentialPatternNames);
 
@@ -466,6 +492,19 @@ namespace Minesweeper.GUI
             Menu form = new Menu();
             form.Show();
             this.Hide();
+        }
+        private void InfoButton_Click(object sender, EventArgs e)
+        {
+            string text = "" +
+                "Here you can create your own difficulty. " +
+                "Choose the board dimensions and mine count, " +
+                "select patterns with: white meaning not included, " +
+                "green meaning optional and red meaning essential. " +
+                "B1 and B2 are automatically set to essential" +
+                "if they are are not any essential patterns" +
+                "";
+            Info infoForm = new Info(text);
+            infoForm.Show();
         }
     }
 }

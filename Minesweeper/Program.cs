@@ -20,6 +20,7 @@ namespace Minesweeper
         public const int HeaderSize = 40;
         public const int MaxCellSize = 40;
         public const int TopFormBarHeight = 21;
+        public const int MaxCustomDifSize = 4100;
         public const string DefaultName = "Guest";
         public static Dictionary<int, int> ConstBetchelsMin = new Dictionary<int, int>
         {

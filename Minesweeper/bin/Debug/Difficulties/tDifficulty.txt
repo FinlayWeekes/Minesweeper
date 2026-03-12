@@ -1,5 +1,5 @@
 Name: 
-test
+t
 Width: 
 10
 Height: 
@@ -11,6 +11,6 @@ true
 EasyPatterns: 
 null
 OptionalPatterns: 
-2-1
+MineCounting
 EssentialPatterns: 
 null

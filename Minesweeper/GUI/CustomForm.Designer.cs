@@ -61,6 +61,7 @@ namespace Minesweeper.GUI
             this.debugLabel = new System.Windows.Forms.Label();
             this.menuButton = new System.Windows.Forms.Button();
             this.mineDensityTextBox = new System.Windows.Forms.TextBox();
+            this.InfoButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // title
@@ -323,11 +324,24 @@ namespace Minesweeper.GUI
             this.mineDensityTextBox.Size = new System.Drawing.Size(100, 20);
             this.mineDensityTextBox.TabIndex = 25;
             // 
+            // InfoButton
+            // 
+            this.InfoButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.InfoButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.InfoButton.Location = new System.Drawing.Point(15, 22);
+            this.InfoButton.Name = "InfoButton";
+            this.InfoButton.Size = new System.Drawing.Size(47, 23);
+            this.InfoButton.TabIndex = 26;
+            this.InfoButton.Text = "Info";
+            this.InfoButton.UseVisualStyleBackColor = true;
+            this.InfoButton.Click += new System.EventHandler(this.InfoButton_Click);
+            // 
             // CustomForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.InfoButton);
             this.Controls.Add(this.mineDensityTextBox);
             this.Controls.Add(this.menuButton);
             this.Controls.Add(this.debugLabel);
@@ -384,5 +398,6 @@ namespace Minesweeper.GUI
         private System.Windows.Forms.Label debugLabel;
         private System.Windows.Forms.Button menuButton;
         private System.Windows.Forms.TextBox mineDensityTextBox;
+        private Button InfoButton;
     }
 }

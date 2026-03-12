@@ -1,10 +1,5 @@
-using Microsoft.SqlServer.Server;
-using Minesweeper.GUI;
 using System;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.IO;
-using System.Threading;
 
 namespace Minesweeper.AI
 {
@@ -30,9 +25,6 @@ namespace Minesweeper.AI
             {
                 passes++;
                 changed = PassThroughGrid();
-                //System.Diagnostics.Debug.WriteLine("");
-                //grid.DebugDisplayGrid();
-                //System.Diagnostics.Debug.WriteLine("Completed pass: " + passes);
             }
             while (changed);
 
@@ -54,7 +46,6 @@ namespace Minesweeper.AI
                 return false;
             }
 
-            return true;
             return isSolved;
         }
 

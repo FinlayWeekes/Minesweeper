@@ -1,11 +1,8 @@
 ﻿using Minesweeper.AI;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
-using System.Threading;
 using System.Windows.Forms;
 
 namespace Minesweeper.GUI
@@ -57,6 +54,7 @@ namespace Minesweeper.GUI
             if (!difficulty.Custom) times = GetTopTimes();
 
             InitializeComponent();
+            System.Diagnostics.Debug.WriteLine("Initialised board");
 
             clickCount = 0;
             remaningHiddenCells = width * height;
@@ -64,12 +62,15 @@ namespace Minesweeper.GUI
             MineCountDisplay.Text = remaningMines.ToString();
 
             cellSize = CalculateCellSize();
+            System.Diagnostics.Debug.WriteLine(cellSize);
 
             this.ClientSize = new Size(width * cellSize, height * cellSize + Program.HeaderSize);
 
             CreateColours(LightMode);
 
+            System.Diagnostics.Debug.WriteLine("populating cells");
             PopulateCells();
+            System.Diagnostics.Debug.WriteLine("populated cells");
         }
         private List<int> GetTopTimes()
         {
@@ -172,22 +173,14 @@ namespace Minesweeper.GUI
                 int seed = GetSeed();
 
                 if (Program.TestingModeOn) RandomiseStarter(ref firstCol, ref firstRow, seed);
-                
-                //System.Diagnostics.Debug.WriteLine("");
 
                 System.Diagnostics.Debug.WriteLine("GENERATING NEW BOARD: " + count + " SEED: " + seed);
-                //if (count % 1000 == 0) System.Diagnostics.Debug.WriteLine("SEARCHED " + count + " GRIDS");
 
                 grid = new Grid(width, height, firstCol, firstRow, mineCount, seed, false);
 
-                //grid.DebugDisplayRevealedGrid();
                 grid.GetCell(firstCol, firstRow).Open();
 
                 solver = new Solver(difficulty, grid);
-                //if (solver.IsSolvable()) solvableCount++;
-                //System.Diagnostics.Debug.WriteLine("solved " + solvableCount);
-
-                //System.Diagnostics.Debug.WriteLine("Solved");
                 solvable = solver.IsSolvable();
 
                 if (solvable)
@@ -196,7 +189,6 @@ namespace Minesweeper.GUI
                 }
             }
             while (!solvable || (!difficulty.Custom && betchels < Program.ConstBetchelsMin[difficulty.NameNum]));
-            //while (true);
 
             System.Diagnostics.Debug.WriteLine("Created after " + count + " grids");
             System.Diagnostics.Debug.WriteLine("Seed: " + grid.Seed);
